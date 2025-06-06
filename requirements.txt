@@ -1,5 +1,5 @@
-fastapi==0.115.2
-uvicorn==0.34.0
-transformers==4.40.2
-scikit-learn==1.5.0
-numpy==1.26.4
+fastapi==0.115.12
+uvicorn==0.34.3
+numpy==1.22.0
+scipy==1.8.1
+scikit-learn==1.7.0
