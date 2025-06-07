@@ -1,29 +1,27 @@
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, Request
 from pydantic import BaseModel
-from transformers import pipeline
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.metrics.pairwise import cosine_similarity
 
 app = FastAPI()
 
-# Load the transformer pipeline
-MODEL_NAME = "sentence-transformers/paraphrase-MiniLM-L6-v2"
+corpus = [
+    "What is your name?",
+    "How can I help you today?",
+    "What services do you provide?",
+    "Tell me a joke.",
+    "Goodbye!"
+]
 
-try:
-    embedder = pipeline("feature-extraction", model=MODEL_NAME, tokenizer=MODEL_NAME, trust_remote_code=True)
-except Exception as e:
-    raise RuntimeError(f"Model load failed: {e}")
+vectorizer = TfidfVectorizer()
+X = vectorizer.fit_transform(corpus)
 
-# Define input schema
-class TextInput(BaseModel):
+class Query(BaseModel):
     text: str
 
-@app.get("/")
-def root():
-    return {"message": "Embedding API is running."}
-
 @app.post("/embed")
-def embed(input: TextInput):
-    try:
-        embedding = embedder(input.text)
-        return {"embedding": embedding[0]}  # Use first layer output
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+def get_best_response(query: Query):
+    query_vec = vectorizer.transform([query.text])
+    similarity = cosine_similarity(query_vec, X)
+    best_match_idx = similarity.argmax()
+    return {"response": corpus[best_match_idx]}
