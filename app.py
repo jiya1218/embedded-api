@@ -1,6 +1,7 @@
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, Request
 from pydantic import BaseModel
 from sklearn.feature_extraction.text import TfidfVectorizer
+from typing import List
 import numpy as np
 
 app = FastAPI()
@@ -8,17 +9,18 @@ app = FastAPI()
 vectorizer = TfidfVectorizer()
 
 class EmbeddingRequest(BaseModel):
-    texts: list[str]
+    texts: List[str]
 
 @app.get("/")
-def home():
+def root():
     return {"message": "Embedding API is live!"}
 
-@app.post("/embedding")
-def generate_embeddings(req: EmbeddingRequest):
-    try:
-        vectors = vectorizer.fit_transform(req.texts)
-        embeddings = vectors.toarray().tolist()
-        return {"embeddings": embeddings}
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+@app.post("/embed")
+def embed_texts(request: EmbeddingRequest):
+    texts = request.texts
+    if not texts:
+        return {"embeddings": []}
+
+    vectors = vectorizer.fit_transform(texts)
+    embeddings = vectors.toarray().tolist()
+    return {"embeddings": embeddings}
