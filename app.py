@@ -1,21 +1,22 @@
-# app.py
 from fastapi import FastAPI, Request
 from pydantic import BaseModel
 from sklearn.feature_extraction.text import TfidfVectorizer
-from sklearn.metrics.pairwise import cosine_similarity
 
 app = FastAPI()
 
-class EmbeddingRequest(BaseModel):
-    texts: list[str]
+class EmbedRequest(BaseModel):
+    text: str
 
+# Initialize the TF-IDF model
 vectorizer = TfidfVectorizer()
-
-@app.post("/embed")
-def embed(req: EmbeddingRequest):
-    embeddings = vectorizer.fit_transform(req.texts).toarray()
-    return {"embeddings": embeddings.tolist()}
+corpus = ["This is a test", "We are testing the embedding API", "This is another sentence"]
+vectorizer.fit(corpus)
 
 @app.get("/")
-def root():
-    return {"message": "Embedding API is working!"}
+def read_root():
+    return {"message": "Embedding API is live!"}
+
+@app.post("/embed")
+def get_embedding(request: EmbedRequest):
+    vec = vectorizer.transform([request.text]).toarray()[0]
+    return {"embedding": vec.tolist()}
