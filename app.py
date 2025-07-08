@@ -1,13 +1,12 @@
-# app.py — proper embedding API using SentenceTransformer
-
-from fastapi import FastAPI
+# ✅ app.py for real embeddings using TfidfVectorizer (no HuggingFace, no PyTorch)
+from fastapi import FastAPI, Request
 from pydantic import BaseModel
 from fastapi.middleware.cors import CORSMiddleware
-from sentence_transformers import SentenceTransformer
+from sklearn.feature_extraction.text import TfidfVectorizer
 
 app = FastAPI()
 
-# Enable CORS (useful for frontend or API test tools)
+# Enable CORS for testing
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -18,14 +17,14 @@ app.add_middleware(
 class Texts(BaseModel):
     texts: list[str]
 
-# ✅ Load real model (384-dim vectors, very fast and semantic)
-model = SentenceTransformer("all-MiniLM-L6-v2")
+vectorizer = TfidfVectorizer()
+vectorizer.fit(["sample sentence for initializing tfidf vectorizer"])
 
 @app.get("/")
 def root():
-    return {"message": "🚀 Embedding API is live and using SentenceTransformer"}
+    return {"message": "Embedding API is live!"}
 
 @app.post("/embed")
 def embed_texts(texts: Texts):
-    embeddings = model.encode(texts.texts)
-    return {"embeddings": embeddings.tolist()}
+    vectors = vectorizer.transform(texts.texts).toarray()
+    return {"embeddings": vectors.tolist()}
